@@ -130,6 +130,7 @@ def move_up_left(curr_node):
             if map_queue.queue[i][1] == next_point:
                 if map_queue.queue[i][0] > updated_cost:
                     map_queue.queue[i] = next_node 
+                    parent_child_info[next_point] = current_point
                     return 
                 else:
                     return
@@ -148,6 +149,7 @@ def move_down_right(curr_node):
             if map_queue.queue[i][1] == next_point:
                 if map_queue.queue[i][0] > updated_cost:
                     map_queue.queue[i] = next_node 
+                    parent_child_info[next_point] = current_point
                     return 
                 else:
                     return
@@ -166,6 +168,7 @@ def move_down_left(curr_node):
             if map_queue.queue[i][1] == next_point:
                 if map_queue.queue[i][0] > updated_cost:
                     map_queue.queue[i] = next_node 
+                    parent_child_info[next_point] = current_point
                     return 
                 else:
                     return
@@ -184,6 +187,7 @@ def move_up(curr_node):
             if map_queue.queue[i][1] == next_point:
                 if map_queue.queue[i][0] > updated_cost:
                     map_queue.queue[i] = next_node 
+                    parent_child_info[next_point] = current_point
                     return 
                 else:
                     return
@@ -202,6 +206,7 @@ def move_down(curr_node):
             if map_queue.queue[i][1] == next_point:
                 if map_queue.queue[i][0] > updated_cost:
                     map_queue.queue[i] = next_node 
+                    parent_child_info[next_point] = current_point
                     return 
                 else:
                     return
@@ -220,6 +225,7 @@ def move_left(curr_node):
             if map_queue.queue[i][1] == next_point:
                 if map_queue.queue[i][0] > updated_cost:
                     map_queue.queue[i] = next_node 
+                    parent_child_info[next_point] = current_point
                     return 
                 else:
                     return
@@ -238,25 +244,37 @@ def move_right(curr_node):
             if map_queue.queue[i][1] == next_point:
                 if map_queue.queue[i][0] > updated_cost:
                     map_queue.queue[i] = next_node 
+                    parent_child_info[next_point] = current_point
                     return 
                 else:
                     return
         map_queue.put(next_node)
         parent_child_info[next_point] = current_point
 
+# function to track back from the fianl state to the initial state to get the shortest path
+def back_tracking(path_info, initial, current):
+    child = path_info.get(current)
+    current_tuple = tuple(current)
+    child_tuple = tuple(child)
+    shortest_path.append(current_tuple)
+    shortest_path.append(child_tuple)
+    while child != initial:  
+        child = path_info.get(child)
+        child_tuple = tuple(child)
+        shortest_path.append(child_tuple)
+    return shortest_path
+
 create_obstacle_map()
-# print(obs_points)
-# obs_points = [(50, 50), (100, 100)]
 start_node, goal_node = get_input()
 start = time.time()
-# start_node, goal_node = (6, 6), (40, 40)
 map_queue = PriorityQueue()
 map_queue.put((0, start_node))
 
 visited_nodes = []
 parent_child_info = {}
+shortest_path = []
+
 while True:
-    # print("queue not empty")
     current_node = map_queue.get()
     visited_nodes.append(current_node[1])
     x, y = current_node[1][0], current_node[1][1]
@@ -282,5 +300,8 @@ while True:
         print("END")
         print(current_node[1])
         stop = time.time()
-        print("Time: ",stop - start)        
+        print("Time: ",stop - start)   
+        shortest = back_tracking(parent_child_info, start_node, goal_node)
+        shortest.reverse()     
+        print(shortest)
         break
