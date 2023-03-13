@@ -1,79 +1,64 @@
-import matplotlib.pyplot as plt
-import numpy as np
 from queue import PriorityQueue
 import time
+import pygame as pyg
 
 obstacle_points = []
 
-def create_obstacle_map():
-    X_SIZE = 600
-    Y_SIZE = 250
+X_SIZE = 600
+Y_SIZE = 250
 
-    plt.xlim([0,X_SIZE])
-    plt.ylim([0,Y_SIZE])
+def create_obstacle_map():
 
     # first rectangle
     for xp in range(100,150):
         for yp in range(0,100):
-            # plt.scatter(xp, yp, c="red")
             obstacle_points.append((xp,yp))
     
     # second rectangle
     for xp in range(100,150):
         for yp in range(150,250):
-            # plt.scatter(xp, yp, c="red")
             obstacle_points.append((xp,yp))
 
     # triangle above half
     for xp in range(460,510):
         for yp in range(125,225):
             if 2*xp+yp <= 1145:
-                # plt.scatter(xp, yp, c= "red")
                 obstacle_points.append((xp,yp))
 
     # triangle below half
     for xp in range(460,600):
         for yp in range(25,125):
             if 2*xp - yp <= 895:
-                # plt.scatter(xp,yp, c="red")
                 obstacle_points.append((xp,yp))
 
     # rectangle part of hexagon
     for xp in range(235,365):
         for yp in range(85,160):
-            # plt.scatter(xp,yp, c="red")
             obstacle_points.append((xp,yp))
 
     # left of upper triangle
     for xp in range(235,300):
         for yp in range(160,198):
             if 38*xp - 65*yp >= -1470:
-                # plt.scatter(xp,yp, c="red")
                 obstacle_points.append((xp,yp))
     
     # right of upper triangle
     for xp in range(300,365):
         for yp in range(160,198):
             if 38*xp + 65*yp <= 24270:
-                # plt.scatter(xp,yp, c="red")
                 obstacle_points.append((xp,yp))
 
     # left of lower triangle
     for xp in range(235,300):
         for yp in range(58,85):
             if 27*xp + 65*yp >= 11870:
-                # plt.scatter(xp,yp, c="red")
                 obstacle_points.append((xp,yp))
 
     # right of lower triangle
     for xp in range(300,365):
         for yp in range(58,85):
             if 27*xp - 65*yp <= 4330:
-                # plt.scatter(xp,yp, c="red")
                 obstacle_points.append((xp,yp))
-
-    # plt.show()
-    return obstacle_points
 
 def get_input():
     accept_start_node, accept_goal_node = True, True
@@ -251,7 +236,7 @@ def move_right(curr_node):
         map_queue.put(next_node)
         parent_child_info[next_point] = current_point
 
-# function to track back from the fianl state to the initial state to get the shortest path
+# function to track back from the final state to the initial state to get the shortest path
 def back_tracking(path_info, initial, current):
     child = path_info.get(current)
     current_tuple = tuple(current)
@@ -263,6 +248,87 @@ def back_tracking(path_info, initial, current):
         child_tuple = tuple(child)
         shortest_path.append(child_tuple)
     return shortest_path
+
+def flip_points(points, height):
+    return (points[0], height - points[1])
+
+def flip_object_points(points, height, object_height):
+    return (points[0], height - points[1] - object_height)
+
+def pygame_visualization(visited_nodes, shortest_path):
+
+    pyg.init()
+    window = pyg.display.set_mode((X_SIZE,Y_SIZE))
+
+    obstacle_color = "red"
+    clearance_color = "pink"
+    condition = True
+    clock = pyg.time.Clock()
+
+    rect2_clearance = flip_object_points([95, 0], 250, 105)
+    rect1_clearance = flip_object_points([95, 145], 250, 105)
+    rect2_original = flip_object_points([100, 0], 250, 100)
+    rect1_original = flip_object_points([100, 150], 250, 100)
+
+    triangle1_clearance = flip_points([455, 20], 250)
+    triangle2_clearance = flip_points([463, 20], 250)
+    triangle3_clearance = flip_points([515.5, 125], 250)
+    triangle4_clearance = flip_points([463, 230], 250)
+    triangle5_clearance = flip_points([455, 230], 250)
+
+    triangle1 = (460, 25)
+    triangle2 = (460, 225)
+    triangle3 = (510, 125)
+
+    hexagon1_clearance = (300, 205.76)
+    hexagon2_clearance = (230, 165.38)
+    hexagon3_clearance = (230, 84.61)
+    hexagon4_clearance = (300, 44.23)
+    hexagon5_clearance = (370, 84.61)
+    hexagon6_clearance = (370, 165.38)
+
+    hexagon1_org = (235,87.5)
+    hexagon2_org = (300,50)
+    hexagon3_org = (365,87.5)
+    hexagon4_org = (365,162.5)
+    hexagon5_org = (300,200)
+    hexagon6_org = (235,162.5)
+
+    while condition:
+        for loop in pyg.event.get():
+            if loop.type == pyg.QUIT:
+                condition = False
+
+        pyg.draw.rect(window, clearance_color, pyg.Rect(rect2_clearance[0], rect2_clearance[1], 60, 105))
+        pyg.draw.rect(window, clearance_color, pyg.Rect(rect1_clearance[0], rect1_clearance[1], 60, 105))
+        pyg.draw.rect(window, obstacle_color, pyg.Rect(rect2_original[0], rect2_original[1], 50, 100))
+        pyg.draw.rect(window, obstacle_color, pyg.Rect(rect1_original[0], rect1_original[1], 50, 100))
+
+        pyg.draw.polygon(window, clearance_color, ((triangle1_clearance),(triangle2_clearance),(triangle3_clearance), (triangle4_clearance), (triangle5_clearance)))
+        pyg.draw.polygon(window, obstacle_color, ((triangle1),(triangle2),(triangle3)))
+
+        pyg.draw.polygon(window, clearance_color, ((hexagon1_clearance),(hexagon2_clearance),(hexagon3_clearance),(hexagon4_clearance),(hexagon5_clearance),(hexagon6_clearance)))
+        pyg.draw.polygon(window, obstacle_color, ((hexagon1_org),(hexagon2_org),(hexagon3_org),(hexagon4_org),(hexagon5_org),(hexagon6_org)))
+
+        pyg.draw.rect(window, clearance_color ,pyg.Rect(0, 0, 600, 5))
+        pyg.draw.rect(window, clearance_color ,pyg.Rect(0, 245, 600, 5))
+        pyg.draw.rect(window, clearance_color ,pyg.Rect(0, 0, 5, 250))
+        pyg.draw.rect(window, clearance_color ,pyg.Rect(595, 0, 5, 250))
+
+        for node in visited_nodes:
+            pyg.draw.circle(window, "white", flip_points(node, 250), 1)
+            pyg.display.flip()
+            clock.tick(700)
+
+        for node in shortest_path:
+            pyg.draw.circle(window, "teal", flip_points(node, 250), 1)
+            pyg.display.flip()
+            clock.tick(10)
+
+        pyg.display.flip()
+        pyg.time.wait(3000)
+        condition = False
+    pyg.quit()
 
 create_obstacle_map()
 start_node, goal_node = get_input()
@@ -305,3 +371,5 @@ while True:
         shortest.reverse()     
         print(shortest)
         break
+
+pygame_visualization(visited_nodes, shortest_path)
