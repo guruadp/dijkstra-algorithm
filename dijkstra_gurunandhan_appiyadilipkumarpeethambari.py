@@ -1,65 +1,76 @@
+# importing required libraries
 from queue import PriorityQueue
 import time
 import pygame as pyg
 
 obstacle_points = []
 
+# size of the map
 X_SIZE = 600
 Y_SIZE = 250
 
+# create map with obstacle
 def create_obstacle_map():
-
-    # first rectangle
-    for xp in range(100,150):
-        for yp in range(0,100):
+    # Wall clearance
+    for xp in range(0,601):
+        for yp in range(0,6):
+            obstacle_points.append((xp,yp))
+        for yp in range(245,251):
             obstacle_points.append((xp,yp))
     
-    # second rectangle
-    for xp in range(100,150):
-        for yp in range(150,250):
+    for yp in range(0,251):
+        for xp in range(0,6):
+            obstacle_points.append((xp,yp))
+        for xp in range(595,601):
             obstacle_points.append((xp,yp))
 
-    # triangle above half
-    for xp in range(460,510):
-        for yp in range(125,225):
-            if 2*xp+yp <= 1145:
-                obstacle_points.append((xp,yp))
-
-    # triangle below half
-    for xp in range(460,600):
-        for yp in range(25,125):
-            if 2*xp - yp <= 895:
-                obstacle_points.append((xp,yp))
-
-    # rectangle part of hexagon
-    for xp in range(235,365):
-        for yp in range(85,160):
+    # Rectangle and clearance
+    for xp in range(100,151):
+        for yp in range(101,106):
             obstacle_points.append((xp,yp))
-
-    # left of upper triangle
-    for xp in range(235,300):
-        for yp in range(160,198):
-            if 38*xp - 65*yp >= -1470:
-                obstacle_points.append((xp,yp))
+        for yp in range(145, 151):
+            obstacle_points.append((xp,yp))
+        for yp in range(0,101):
+            obstacle_points.append((xp,yp))
     
-    # right of upper triangle
-    for xp in range(300,365):
-        for yp in range(160,198):
-            if 38*xp + 65*yp <= 24270:
+    for xp in range(151,156):
+        for yp in range(0,106):
+            obstacle_points.append((xp,yp))
+        for yp in range(145,250):
+            obstacle_points.append((xp,yp))
+    
+    for xp in range(100,151):
+        for yp in range(150,251):
+            obstacle_points.append((xp,yp))
+        for yp in range(101,105):
+            obstacle_points.append((xp,yp))
+            
+    for xp in range(95,100):
+        for yp in range(150,251):
+            obstacle_points.append((xp,yp))
+        for yp in range(100,105):
+            obstacle_points.append((xp,yp))  
+        for yp in range(0,101):
+            obstacle_points.append((xp,yp))     
+        for yp in range(145,151):
+            obstacle_points.append((xp,yp)) 
+
+    # triangle 
+    for xp in range(450, 601):
+        for yp in range(0,251):
+            if (2*xp - yp <= 895) and (2*xp+yp <= 1145):
                 obstacle_points.append((xp,yp))
 
-    # left of lower triangle
-    for xp in range(235,300):
-        for yp in range(58,85):
-            if 27*xp + 65*yp >= 11870:
+            if (2*xp+yp <= 1156.18) and (2*xp - yp <= 906.18):
                 obstacle_points.append((xp,yp))
 
-    # right of lower triangle
-    for xp in range(300,365):
-        for yp in range(58,85):
-            if 27*xp - 65*yp <= 4330:
+    # Hexagon
+    for xp in range(220,380):
+        for yp in range(40,230):
+            if  (yp - (0.577)*xp - (32.692)) < 0 and (yp + (0.577)*xp - (378.846)) < 0 and (yp - (0.577)*xp + (128.846)) > 0 and (yp + (0.577)*xp - (217.307)) > 0 and (230 <= xp <= 370):
                 obstacle_points.append((xp,yp))
 
+# get input and check if valid or not
 def get_input():
     accept_start_node, accept_goal_node = True, True
     while accept_start_node:
@@ -68,10 +79,8 @@ def get_input():
         start_node = (start_x, start_y)
         if start_node not in obstacle_points:
             accept_start_node = False
-            # print("Valid nodes")
         else:
             print("You have entered invalid start node. Please enter a valid note...")
-            # continue
 
     while accept_goal_node:    
         goal_x = int(input("Enter goal x: "))
@@ -79,7 +88,6 @@ def get_input():
         goal_node = (goal_x, goal_y)
         if goal_node not in obstacle_points:
             accept_goal_node = False
-            print("Valid nodes")
         else:
             print("You have entered invalid goal node. Please enter a valid note...")
     return start_node, goal_node
@@ -236,7 +244,7 @@ def move_right(curr_node):
         map_queue.put(next_node)
         parent_child_info[next_point] = current_point
 
-# function to track back from the final state to the initial state to get the shortest path
+# function to track back from the goal node to the start node to get the shortest path
 def back_tracking(path_info, initial, current):
     child = path_info.get(current)
     current_tuple = tuple(current)
@@ -249,6 +257,7 @@ def back_tracking(path_info, initial, current):
         shortest_path.append(child_tuple)
     return shortest_path
 
+# to flip the coordinates because of the origin change in pygame
 def flip_points(points, height):
     return (points[0], height - points[1])
 
@@ -256,7 +265,6 @@ def flip_object_points(points, height, object_height):
     return (points[0], height - points[1] - object_height)
 
 def pygame_visualization(visited_nodes, shortest_path):
-
     pyg.init()
     window = pyg.display.set_mode((X_SIZE,Y_SIZE))
 
@@ -363,13 +371,11 @@ while True:
             move_down_left(current_node)
         
     else:
-        print("END")
-        print(current_node[1])
+        print("Reached Goal node")
         stop = time.time()
         print("Time: ",stop - start)   
         shortest = back_tracking(parent_child_info, start_node, goal_node)
-        shortest.reverse()     
-        print(shortest)
+        shortest.reverse()  
         break
 
 pygame_visualization(visited_nodes, shortest_path)
